@@ -12,7 +12,7 @@ impl Config {
     fn new() -> Self {
         Config {
             input: String::new(),
-            out: String::new(),
+            out: String::from("index.html"),
             src: String::new(),
         }
     }

@@ -11,16 +11,16 @@ pub fn gen(parts: Vec<Parts>, src: String, format: String) -> String {
     });
     let base = fragments.get("base.html").unwrap().to_string();
     let mut script = fragments.get("scripts.html").unwrap().to_string();
-    let (mut innumarable, mut numarable) = (
+    let (mut innumerable, mut numarable) = (
         Vec::with_capacity(parts.len()),
         Vec::with_capacity(parts.len()),
     );
     let mut i = 0;
     parts.iter().for_each(|part| match part {
         Parts::Innumerable(e) => {
-            innumarable.push(
+            innumerable.push(
                 fragments
-                    .get("innumarable.html")
+                    .get("innumerable.html")
                     .unwrap()
                     .replace("$n", format!("{i}").as_str()),
             );
@@ -37,7 +37,7 @@ pub fn gen(parts: Vec<Parts>, src: String, format: String) -> String {
             numarable.push(format!("<div class=\"numerable\">{}</div>", gen_html(e)))
         }
     });
-    base.replace("<!--innumarable-->", &innumarable.concat())
+    base.replace("<!--innumerable-->", &innumerable.concat())
         .replace("<!--numerable-->", &numarable.concat())
         .replace(
             "<!--code-->",
@@ -63,6 +63,7 @@ fn format_to_script(format: String) -> String {
     let mut res = String::new();
     let mut last = 0;
     let mut i = 0;
+    let format = comments_cleaning(format);
     for c in format.chars() {
         if c == ']' {
             last = 0;

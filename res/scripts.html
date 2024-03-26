@@ -13,7 +13,7 @@
   function parse() {
     let innumerable = document.getElementsByClassName('container');
     let numerable = document.getElementsByClassName('numerable');
-    let config = '\n+0\n+1\n2 {\n\t3\n\t4\n\t5\n}\n';
+    let config = '<!--format-->';
     let space_char = '<!--space_char-->';
     for (let i = 0; i < innumerable.length; i++) {
       let res = '';
@@ -22,13 +22,13 @@
           switch (child.tagName.toLowerCase()) {
             case 'label':
               res += child.className;
-              res += space_char;
               break;
             case 'select':
             case 'input':
               res += child.value;
               break;
           }
+          res += space_char;
         }
         res += '\n';
       }
@@ -47,6 +47,7 @@
             res += child.value;
             break;
         }
+        res += space_char;
       }
       config = config.replace(i + innumerable.length, res);
     }

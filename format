@@ -1,7 +1,4 @@
-+[exec('Run:') {}]
-+[bindsym('Key binding:') {} exec('run:') {}]
-[input {}] {
-	[dwt enable('yes')|disable('no')]
-	[tap('Натиснення',default) enable|disable]
-	[natural_scroll enable|disable]
-}
+#!/bin/bash
+
++[echo {}]
+[echo('if') {} true|false]

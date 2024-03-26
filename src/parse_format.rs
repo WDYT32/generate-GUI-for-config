@@ -1,4 +1,4 @@
-use std::{borrow::Borrow, char, collections::HashSet};
+use std::{char, collections::HashSet};
 
 use unicode_segmentation::UnicodeSegmentation;
 #[derive(Debug)]
@@ -98,8 +98,24 @@ impl SkipSplit for String {
         res
     }
 }
+pub fn comments_cleaning(mut format: String) -> String {
+    let mut start = 0;
+    let mut is_comment = false;
+    for (i, c) in format.clone().char_indices() {
+        if c == '#' {
+            start = i;
+            is_comment = true;
+        }
+        if c == '\n' && is_comment {
+            format = format.replace(&format.as_str()[start..=i], "");
+            is_comment = false;
+        }
+    }
+    format
+}
 impl Parts {
-    pub fn parse(format: String) -> Vec<Parts> {
+    pub fn parse(mut format: String) -> Vec<Parts> {
+        format = comments_cleaning(format);
         let lines = parse_segment(vec![], format.as_str());
         let mut rop = RulesOfParse::new();
         lines
