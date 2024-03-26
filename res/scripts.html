@@ -1,0 +1,58 @@
+<script>
+  function addEl(i) {
+    var fragmentContainer = document.createElement('div');
+    fragmentContainer.className = 'html-fragment';
+    let hf = '';
+    switch (i) {
+      //<!--html-fragment-->
+    }
+    fragmentContainer.innerHTML = hf;
+    var div = document.getElementsByClassName('container')[i];
+    div.appendChild(fragmentContainer);
+  }
+  function parse() {
+    let innumerable = document.getElementsByClassName('container');
+    let numerable = document.getElementsByClassName('numerable');
+    let config = '\n+0\n+1\n2 {\n\t3\n\t4\n\t5\n}\n';
+    let space_char = '<!--space_char-->';
+    for (let i = 0; i < innumerable.length; i++) {
+      let res = '';
+      for (children of innumerable[i].children) {
+        for (const child of children.children) {
+          switch (child.tagName.toLowerCase()) {
+            case 'label':
+              res += child.className;
+              res += space_char;
+              break;
+            case 'select':
+            case 'input':
+              res += child.value;
+              break;
+          }
+        }
+        res += '\n';
+      }
+      config = config.replace('+' + i, res);
+    }
+    for (let i = 0; i < numerable.length; i++) {
+      let res = '';
+      for (const child of numerable[i].children) {
+        switch (child.tagName.toLowerCase()) {
+          case 'label':
+            res += child.className;
+            res += space_char;
+            break;
+          case 'select':
+          case 'input':
+            res += child.value;
+            break;
+        }
+      }
+      config = config.replace(i + innumerable.length, res);
+    }
+    return config;
+  }
+  function send() {
+    alert(parse());
+  }
+</script>
