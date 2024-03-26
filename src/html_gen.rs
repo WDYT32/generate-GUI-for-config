@@ -42,12 +42,7 @@ pub fn gen(parts: Vec<Parts>, src: String, format: String) -> String {
         .replace(
             "<!--code-->",
             &script
-                .replace(
-                    "<!--format-->",
-                    &format_to_script(format.clone())
-                        .replace("\n", "\\n")
-                        .replace("\t", "\\t"),
-                )
+                .replace("<!--format-->", &format_to_script(format.clone()))
                 .replace(
                     "<!--space_char-->",
                     &match get_rule(format, "space_char".to_string()) {
@@ -63,25 +58,25 @@ fn format_to_script(format: String) -> String {
     let mut res = String::new();
     let mut last = 0;
     let mut i = 0;
-    let format = comments_cleaning(format);
     for c in format.chars() {
         if c == ']' {
             last = 0;
             continue;
-        } else if last == 1 {
-            continue;
-        }
-        if c == '!' {
-            last = 1;
+        } else if c == '!' {
+            last = 1
         } else if c == '[' {
-            last = 1;
+            last = 2;
             format!("{i}").chars().for_each(|s| res.push(s));
-            i += 1;
-        } else {
-            res.push(c);
+            i += 1
+        } else if last != 2 {
+            if last == 1 {
+                res.push('!');
+                last = 0;
+            }
+            res.push(c)
         }
     }
-    res
+    res.replace("\n", "\\n").replace("\t", "\\t")
 }
 fn get_rule(format: String, _type: String) -> Rules {
     let lines = parse_segment(vec![], &format);
