@@ -1,7 +1,7 @@
 # generate-GUI-for-config
 A utility for quickly generating HTML settings pages based on configuration files.
 ## About
-This utility needs to fast making settings page for configuration files.
+This utility need to fast making settings page for configuration. Support anything configuration formats apart from TOML and JSON.
 ## Installation
 You may build it from sources or download this from releases page.
 
@@ -68,8 +68,7 @@ It is indicated in parentheses `()`.
 |`default`         |Options only. Use it if you need to select default value.                    |
 
 ### Resources
-If you are not needed to change default functional or styles, then may not read next.
-For example:
+If you need to change the contents of the resource folder, then follow these recommendations:
 
 `base.html`
 
@@ -96,8 +95,6 @@ This is usually an HTML page, but there are comments that will be replaced:
 `<!--innumerable-->` - here will be included contains of innumerable.html and duplicated according to the format number of times.
 
 `<!--numerable-->` - same as previous, but for numerable type and not have an HTML file.
-
-If you need to change the contents of the resource folder, then follow these recommendations:
 
 For default `innumerable.html`:
 ```html
@@ -171,7 +168,9 @@ For default `scripts.html`:
 ```
 - Don't delete functions `parse` and `addEl`.
 - Don't rewrite it if you don't know what is work it.
+
 For rewrites:
+
 There is `//<!--html-fragment-->` comments in `addEl` function. It's annotation, which will be replaced by `hf='generates-html-code'`, which is needed to add various numerable elements.
 We see `parse` function which is needed to output configuration in original format. There is `<!--format-->` and `<!--space_char-->` in `parse` function. First annotation will be replaced by converted format which ready to repair. The second annotation will be replaced by the eponymous rule from [rules table](#rules-table).
 As for styles, nothing recommendations.

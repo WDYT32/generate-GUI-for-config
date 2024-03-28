@@ -1,5 +1,6 @@
 use crate::parse_format::*;
 use std::{collections::HashMap, fs};
+
 pub fn gen(parts: Vec<Parts>, src: String, format: String) -> String {
     let mut fragments: HashMap<String, String> = HashMap::new();
     fs::read_dir(src).unwrap().for_each(|el| {
@@ -41,17 +42,7 @@ pub fn gen(parts: Vec<Parts>, src: String, format: String) -> String {
         .replace("<!--numerable-->", &numarable.concat())
         .replace(
             "<!--code-->",
-            &script
-                .replace("<!--format-->", &format_to_script(format.clone()))
-                .replace(
-                    "<!--space_char-->",
-                    &match get_rule(format, "space_char".to_string()) {
-                        Rules::SetSymbol(c) => c.to_string(),
-                        Rules::None => " ".to_string(),
-                    }
-                    .replace("\n", "\\n")
-                    .replace("\t", "\\t"),
-                ),
+            &script.replace("<!--format-->", &format_to_script(format.clone())),
         )
 }
 fn format_to_script(format: String) -> String {
@@ -76,7 +67,15 @@ fn format_to_script(format: String) -> String {
             res.push(c)
         }
     }
-    res.replace("\n", "\\n").replace("\t", "\\t")
+    res.replace("\n", "\\n").replace("\t", "\\t").replace(
+        "<!--space_char-->",
+        &match get_rule(format, "space_char".to_string()) {
+            Rules::SetSymbol(c) => c.to_string(),
+            Rules::None => " ".to_string(),
+        }
+        .replace("\n", "\\n")
+        .replace("\t", "\\t"),
+    )
 }
 fn get_rule(format: String, _type: String) -> Rules {
     let lines = parse_segment(vec![], &format);
@@ -95,61 +94,12 @@ fn gen_html(el: &Vec<Vec<(Variable, Vec<Propertise>)>>) -> String {
     el.iter()
         .map(move |frag| {
             if frag.len() == 1 {
-                let el = frag.get(0).unwrap();
-                let mut name = String::new();
-                match &el.0 {
-                    Variable::Val(s) => format!(
-                        "<label class=\"{s}\" {}>{}</label>",
-                        el.1.iter()
-                            .map(|prop| match prop {
-                                Propertise::Name(s) => {
-                                    name = s.to_string();
-                                    "".to_string()
-                                }
-                                Propertise::IsDefault => "".to_string(),
-                            })
-                            .collect::<Vec<String>>()
-                            .concat(),
-                        name.is_empty().then_some(s).unwrap_or(&name)
-                    ),
-                    Variable::String => format!(
-                        "<input type=\"text\" {}>",
-                        el.1.iter()
-                            .map(|prop| match prop {
-                                Propertise::Name(s) => format!("value=\"{s}\" "),
-                                Propertise::IsDefault => "".to_string(),
-                            })
-                            .collect::<Vec<String>>()
-                            .concat()
-                    ),
-                }
+                single_prop_to_html(frag.get(0).unwrap())
             } else {
                 format!(
                     "<select class=\"selection\">{}</select>",
                     frag.iter()
-                        .map(|(var, props)| {
-                            let mut name = String::new();
-                            let prop = props
-                                .iter()
-                                .filter_map(|prop| match prop {
-                                    Propertise::Name(s) => {
-                                        name = s.to_string();
-                                        None
-                                    }
-                                    Propertise::IsDefault => Some("selected "),
-                                })
-                                .collect::<Vec<&str>>()
-                                .concat();
-                            match var {
-                                Variable::Val(s) => {
-                                    format!(
-                                        "<option value=\"{s}\" {prop}>{}</option>",
-                                        name.is_empty().then_some(s).unwrap_or(&name)
-                                    )
-                                }
-                                Variable::String => "".to_string(),
-                            }
-                        })
+                        .map(|(var, props)| variant_to_html(var, props))
                         .collect::<Vec<String>>()
                         .concat()
                 )
@@ -157,4 +107,56 @@ fn gen_html(el: &Vec<Vec<(Variable, Vec<Propertise>)>>) -> String {
         })
         .collect::<Vec<String>>()
         .concat()
+}
+fn single_prop_to_html(el: &(Variable, Vec<Propertise>)) -> String {
+    let mut name = String::new();
+    match &el.0 {
+        Variable::Val(s) => format!(
+            "<label class=\"{s}\" {}>{}</label>",
+            el.1.iter()
+                .map(|prop| match prop {
+                    Propertise::Name(s) => {
+                        name = s.to_string();
+                        "".to_string()
+                    }
+                    Propertise::IsDefault => "".to_string(),
+                })
+                .collect::<Vec<String>>()
+                .concat(),
+            name.is_empty().then_some(s).unwrap_or(&name)
+        ),
+        Variable::String => format!(
+            "<input type=\"text\" {}>",
+            el.1.iter()
+                .map(|prop| match prop {
+                    Propertise::Name(s) => format!("value=\"{s}\" "),
+                    Propertise::IsDefault => "".to_string(),
+                })
+                .collect::<Vec<String>>()
+                .concat()
+        ),
+    }
+}
+fn variant_to_html(var: &Variable, props: &Vec<Propertise>) -> String {
+    let mut name = String::new();
+    let prop = props
+        .iter()
+        .filter_map(|prop| match prop {
+            Propertise::Name(s) => {
+                name = s.to_string();
+                None
+            }
+            Propertise::IsDefault => Some("selected "),
+        })
+        .collect::<Vec<&str>>()
+        .concat();
+    match var {
+        Variable::Val(s) => {
+            format!(
+                "<option value=\"{s}\" {prop}>{}</option>",
+                name.is_empty().then_some(s).unwrap_or(&name)
+            )
+        }
+        Variable::String => "".to_string(),
+    }
 }
