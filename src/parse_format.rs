@@ -98,20 +98,42 @@ impl SkipSplit for String {
         res
     }
 }
-pub fn comments_cleaning(mut format: String) -> String {
-    let mut start = 0;
-    let mut is_comment = false;
-    for (i, c) in format.clone().char_indices() {
-        if c == '#' {
-            start = i;
-            is_comment = true;
-        }
-        if c == '\n' && is_comment {
-            format = format.replace(&format.as_str()[start..=i], "");
-            is_comment = false;
-        }
-    }
-    format
+pub fn comments_cleaning(format: String) -> String {
+    let chars = UnicodeSegmentation::graphemes(format.as_str(), true);
+    let mut mode = 0;
+    let res = chars
+        .filter_map(|c| match c {
+            "@" => {
+                if mode == 2 {
+                    mode = 3
+                } else {
+                    mode = 1;
+                }
+                None
+            }
+            ch => match mode {
+                0 => Some(ch),
+                1 => {
+                    if ch.eq("\"") {
+                        mode = 2;
+                    } else {
+                        mode = 0;
+                    }
+                    None
+                }
+                2 => None,
+                3 => {
+                    if ch.eq("\"") {
+                        mode = 0;
+                    }
+                    None
+                }
+                _ => None,
+            },
+        })
+        .collect::<Vec<&str>>()
+        .concat();
+    res
 }
 impl Parts {
     pub fn parse(mut format: String) -> Vec<Parts> {
@@ -155,16 +177,13 @@ fn parse_value(mut val: String, rules: RulesOfParse) -> Parts {
                     let mut var = variant;
                     match (variant.find('('), variant.find(')')) {
                         (Some(start), Some(end)) => {
-                            let mut chars =
-                                UnicodeSegmentation::graphemes(&variant[start..=end], true)
-                                    .collect::<Vec<&str>>();
-                            chars.remove(0);
-                            let mut word: Vec<&str> = Vec::with_capacity(chars.len());
-                            for c in chars {
+                            let chars = UnicodeSegmentation::graphemes(&variant[start..=end], true);
+                            let mut word: Vec<&str> = Vec::with_capacity(chars.clone().count());
+                            for c in chars.skip(1) {
                                 if c.eq(",") || c.eq(")") {
                                     prop.push(match word.concat().as_str() {
                                         "default" => Propertise::IsDefault,
-                                        v => Propertise::Name(v.replace("'", "")),
+                                        v => Propertise::Name(v.replace("\"", "")),
                                     });
                                     word.clear();
                                 } else {

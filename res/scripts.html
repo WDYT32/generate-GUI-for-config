@@ -6,7 +6,7 @@
     switch (i) {
       //<!--html-fragment-->
     }
-    fragmentContainer.innerHTML = hf;
+    fragmentContainer.innerHTML = hf + '<button onclick="this.parentNode.remove();">✖</button>';
     var div = document.getElementsByClassName('container')[i];
     div.appendChild(fragmentContainer);
   }
@@ -15,10 +15,14 @@
     let numerable = document.getElementsByClassName('numerable');
     let config = '<!--format-->';
     let space_char = '<!--space_char-->';
+    const reg = /%\@~\([^)]*\)~\@%/g;
     for (let i = 0; i < innumerable.length; i++) {
-      let res = '';
       for (children of innumerable[i].children) {
+        const matches = config.match(reg);
+        config = config.replace(matches, matches + '\n' + matches).replace('%@~(', '').replace(')~@%', '');
+        let s = 0;
         for (const child of children.children) {
+          let res = '';
           switch (child.tagName.toLowerCase()) {
             case 'label':
               res += child.className;
@@ -28,15 +32,16 @@
               res += child.value;
               break;
           }
-          res += space_char;
+          config = config.replace('+' + s, res);
+          s++;
         }
-        res += '\n';
       }
-      config = config.replace('+' + i, res);
     }
+    config = config.replace(reg, "");
+    let s = 0;
     for (let i = 0; i < numerable.length; i++) {
-      let res = '';
       for (const child of numerable[i].children) {
+        let res = '';
         switch (child.tagName.toLowerCase()) {
           case 'label':
             res += child.className;
@@ -47,9 +52,8 @@
             res += child.value;
             break;
         }
-        res += space_char;
+        config = config.replace(s, res); s++;
       }
-      config = config.replace(i + innumerable.length, res);
     }
     return config;
   }

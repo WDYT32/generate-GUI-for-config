@@ -1,5 +1,6 @@
 use crate::parse_format::*;
 use std::{collections::HashMap, fs};
+use unicode_segmentation::UnicodeSegmentation;
 
 pub fn gen(parts: Vec<Parts>, src: String, format: String) -> String {
     let mut fragments: HashMap<String, String> = HashMap::new();
@@ -38,44 +39,121 @@ pub fn gen(parts: Vec<Parts>, src: String, format: String) -> String {
             numarable.push(format!("<div class=\"numerable\">{}</div>", gen_html(e)))
         }
     });
+    let skp_char = match get_rule(format.clone(), "space_char".to_string()) {
+        Rules::SetSymbol(c) => c,
+        Rules::None => ' ',
+    }
+    .to_string();
     base.replace("<!--innumerable-->", &innumerable.concat())
         .replace("<!--numerable-->", &numarable.concat())
         .replace(
             "<!--code-->",
-            &script.replace("<!--format-->", &format_to_script(format.clone())),
+            &script
+                .replace("<!--format-->", &format_to_script(format, skp_char.clone()))
+                .replace(
+                    "<!--space_char-->",
+                    &skp_char
+                        .to_string()
+                        .replace("\n", "\\n")
+                        .replace("\t", "\\t"),
+                ),
         )
 }
-fn format_to_script(format: String) -> String {
-    let mut res = String::new();
-    let mut last = 0;
+fn format_to_script(format: String, skip_char: String) -> String {
+    let mut res = String::with_capacity(format.len());
+    let mut innumerable = 0;
+    let mut mode = 0;
+    let mut pervious_mode = 0;
+    let mut word_skiped = false;
+    let mut specless_mode = false;
     let mut i = 0;
-    for c in format.chars() {
-        if c == ']' {
-            last = 0;
-            continue;
-        } else if c == '!' {
-            last = 1
-        } else if c == '[' {
-            last = 2;
-            format!("{i}").chars().for_each(|s| res.push(s));
-            i += 1
-        } else if last != 2 {
-            if last == 1 {
-                res.push('!');
-                last = 0;
+    UnicodeSegmentation::graphemes(format.as_str(), true).for_each(|c| match c {
+        ch if specless_mode => {
+            if ch.eq("@") {
+                mode = 4;
+            } else if ch.eq("\"") {
+                if mode == 4 {
+                    specless_mode = false;
+                    res.pop();
+                    return;
+                }
+            } else if mode == 4 {
+                mode = 0;
             }
-            res.push(c)
+            res.push_str(ch);
         }
-    }
-    res.replace("\n", "\\n").replace("\t", "\\t").replace(
-        "<!--space_char-->",
-        &match get_rule(format, "space_char".to_string()) {
-            Rules::SetSymbol(c) => c.to_string(),
-            Rules::None => " ".to_string(),
+        ch if mode == 4 => {
+            if c.eq("\"") {
+                specless_mode = true;
+            } else {
+                res.push_str(ch);
+            }
+            mode = 0;
         }
-        .replace("\n", "\\n")
-        .replace("\t", "\\t"),
-    )
+        "[" => {
+            if mode == 0 {
+                mode = 3;
+            }
+        }
+        "@" => mode = 4,
+        "]" => {
+            if word_skiped {
+                if mode == 2 {
+                    res.push_str(&format!("+{innumerable}"));
+                    innumerable += 1;
+                    res.push_str(")~@%");
+                } else if mode == 3 {
+                    res.push_str(&format!("{i}"));
+                    i += 1;
+                }
+                word_skiped = false;
+            }
+            mode = 0;
+        }
+        "!" => mode = 1,
+        ")" if pervious_mode == 2 || pervious_mode == 3 => mode = pervious_mode,
+        "}" if pervious_mode == 2 || pervious_mode == 3 => {
+            mode = pervious_mode;
+            word_skiped = true;
+        }
+        "+" => {
+            res.push_str("%@~(");
+            mode = 2;
+        }
+        c => match mode {
+            0 => {
+                res.push_str(c);
+                word_skiped = false
+            }
+            2 | 3 => match c {
+                "(" | "{" => {
+                    pervious_mode = mode;
+                    mode = 1;
+                }
+                ch => {
+                    if ch.eq(&skip_char) || ch.eq("\"") {
+                        if word_skiped {
+                            if mode == 2 {
+                                res.push_str(&format!("+{innumerable}"));
+                                innumerable += 1;
+                            } else {
+                                res.push_str(&format!("{i}"));
+                                i += 1;
+                            }
+                            word_skiped = false;
+                        }
+                        res.push_str(ch);
+                    } else {
+                        word_skiped = true;
+                    }
+                }
+            },
+            _ => (),
+        },
+    });
+    res.replace("\n", "\\n")
+        .replace("\t", "\\t")
+        .replace("'", "\'")
 }
 fn get_rule(format: String, _type: String) -> Rules {
     let lines = parse_segment(vec![], &format);
