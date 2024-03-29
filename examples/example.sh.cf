@@ -1,0 +1,5 @@
+@"#!/bin/bash@"
+
+[echo "{}"]
+[echo("Some text:") "{}"]
++[exec("Run:") {} quite|no_quite]

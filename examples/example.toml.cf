@@ -1,0 +1,24 @@
+![space_symbol =]
+# Site configuration
+@[site@]
+[title="{}"]
+[url="{}"]
+[author="{}"]
+
+# Widget setting
+@[widgets@]
+[enable=true|false]
+[color="{}"]
+[quantity={}]
+
+# User data
+@[user@]
+[name="{}"]
+[age={}]
+[email="{}"]
+[isAdmin=false|true]
+
+# Server data
+@[server@]
+[host="{}"]
+[port={}]

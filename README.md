@@ -1,7 +1,7 @@
 # generate-GUI-for-config
 A utility for quickly generating HTML settings pages based on configuration files.
 ## About
-This utility need to fast making settings page for configuration. Support anything configuration formats apart from TOML and JSON.
+This utility need to fast making settings page for configuration. Support [TOML](example/example.toml.cf), [SH](example.sh.cf) and INI configuration formats.
 ## Installation
 You may build it from sources or download this from releases page.
 
