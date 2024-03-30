@@ -1,27 +1,27 @@
 # generate-GUI-for-config
 A utility for quickly generating HTML settings pages based on configuration files.
 ## About
-This utility need to fast making settings page for configuration. Support [TOML](examples/example.sh.cf), [SH](examples/example.toml.cf) and INI configuration formats.
+This utility need to fast making settings page for configuration. Do not support attachments elements.
 ## Installation
 You may build it from sources or download this from releases page.
 
-For building, it's your needs:
+For building, you should do:
 - Download sources from GitHub page or terminal client.
 - Install Rust from [this link](https://www.rust-lang.org/tools/install) or if you use a Linux-like system, then install `cargo` using your package manager.
-- If you downloaded sources from GitHub page, you need to extract files from archive.
+- If you downloaded the sources from the GitHub page, you need to extract files from archive.
 - Go to the directory where you have placed the source code. It must have `Cargo.toml` file in root.
 - Open your terminal or console in this directory and run `cargo build --release`.
-- After building done by path `target/release/` you find executable file with name `ggfc`.
+- After building is done, you can find the executable file at the path `target/release/` you find executable file with name `ggfc`.
 ## Using
-There type this command (on Windows, you need to type `ggfc.exe` instead of `./ggfc`): `./ggfc path/to/your/format -o file/output/name -r path/to/resources`.
+Type this command (on Windows, you need to type `ggfc.exe` instead of `./ggfc`): `./ggfc path/to/your/format -o file/output/name -r path/to/resources`.
 
 There are arguments:
 
-mandatory
+Mandatory:
 - `format` - file on the basis of which will be generated settings page.
 - `-r` - path to resources needs to generate.
 
-and optional
+And optional:
 - `-o` - which gives output file name.
 
 ### Format
@@ -32,7 +32,7 @@ For example, take bash-script:
 echo 1
 echo 2 true
 ```
-This is how the format will look like:
+This is how the format will look:
 ```
 #!\bin\bash
 ![space_char  ]
@@ -47,7 +47,7 @@ For start comment write `@"` for end same, all that into comments will be ignore
 #### Modifier symbols
 |Modifier symbol|Description|
 |---|--------------------------------------------------------------------------------------------------------------------------|
-| `+` | means that is an innumerable. In settings, it's display which a list to which you can add unlimited number of elements. |
+| `+` | means that is an innumerable. In settings, it displays which a list to which you can add unlimited number of elements. |
 | `!` | means that is a rule. You can read about it in [rules table](#rules-table). General body empty `[rule value]`.|
 
 #### Rules table
@@ -57,9 +57,9 @@ For start comment write `@"` for end same, all that into comments will be ignore
 
 #### Body
 The body consists of the following parts:
-- `echo` - if it has no properties, then displays as is.
-- `{}` - a display in HTML as input field.
-- `true|false` - recommended spaceless. It's options. Displays as `<select>` tag.
+- `echo` - if it has no properties, the displays as is.
+- `{}` - displays in HTML as input field.
+- `true|false` - recommended spaceless. It's option Displays as `<select>` tag.
 
 ##### Properties
 It is indicated in parentheses `()`.
@@ -92,9 +92,9 @@ If you need to change the contents of the resource folder, then follow these rec
 ```
 This is usually an HTML page, but there are comments that will be replaced:
 
-`<!--code-->` - here will be included contains of scripts.html.
+`<!--code-->` - here will be included the contains of scripts.html.
 
-`<!--innumerable-->` - here will be included contains of innumerable.html and duplicated according to the format number of times.
+`<!--innumerable-->` - here will be included the contains of innumerable.html and duplicated according to the format number of times.
 
 `<!--numerable-->` - same as previous, but for numerable type and not have an HTML file.
 
@@ -103,10 +103,10 @@ For default `innumerable.html`:
 <div class="container"></div>
 <button class="add" onclick="addEl($n)">+</button>
 ```
-- Don’t erase container class. It needs for finding elements on page.
-- Button needs to append elements to list. There is variable `$n`, it will be replaced by number of innumerable element on HTML building phase.
+- Do not erase container class. It needs for finding elements on page.
+- Button needs to append elements to list. There is a variable `$n`, it will be replaced by number of innumerable element on HTML building phase.
 
-For default `scripts.html`:
+For the default `scripts.html`:
 ```html
 <script>
   function addEl(i) {
@@ -116,7 +116,7 @@ For default `scripts.html`:
     switch (i) {
       //<!--html-fragment-->
     }
-    fragmentContainer.innerHTML = hf;
+    fragmentContainer.innerHTML = hf + '<button onclick="this.parentNode.remove();">✖</button>';
     var div = document.getElementsByClassName('container')[i];
     div.appendChild(fragmentContainer);
   }
@@ -125,10 +125,14 @@ For default `scripts.html`:
     let numerable = document.getElementsByClassName('numerable');
     let config = '<!--format-->';
     let space_char = '<!--space_char-->';
+    const reg = /%\@~\([^)]*\)~\@%/g;
     for (let i = 0; i < innumerable.length; i++) {
-      let res = '';
       for (children of innumerable[i].children) {
+        const matches = config.match(reg);
+        config = config.replace(matches, matches + '\n' + matches).replace('%@~(', '').replace(')~@%', '');
+        let s = 0;
         for (const child of children.children) {
+          let res = '';
           switch (child.tagName.toLowerCase()) {
             case 'label':
               res += child.className;
@@ -138,15 +142,16 @@ For default `scripts.html`:
               res += child.value;
               break;
           }
-          res += space_char;
+          config = config.replace('+' + s, res);
+          s++;
         }
-        res += '\n';
       }
-      config = config.replace('+' + i, res);
     }
+    config = config.replace(reg, "");
+    let s = 0;
     for (let i = 0; i < numerable.length; i++) {
-      let res = '';
       for (const child of numerable[i].children) {
+        let res = '';
         switch (child.tagName.toLowerCase()) {
           case 'label':
             res += child.className;
@@ -157,9 +162,8 @@ For default `scripts.html`:
             res += child.value;
             break;
         }
-        res += space_char;
+        config = config.replace(s, res); s++;
       }
-      config = config.replace(i + innumerable.length, res);
     }
     return config;
   }
@@ -174,7 +178,7 @@ For default `scripts.html`:
 For rewrites:
 
 There is `//<!--html-fragment-->` comments in `addEl` function. It's annotation, which will be replaced by `hf='generates-html-code'`, which is needed to add various numerable elements.
-We see `parse` function which is needed to output configuration in original format. There is `<!--format-->` and `<!--space_char-->` in `parse` function. First annotation will be replaced by converted format which ready to repair. The second annotation will be replaced by the eponymous rule from [rules table](#rules-table).
+We see `parse` function which is needed to output configuration in original format. There is `<!--format-->` and `<!--space_char-->` in `parse` function. First annotation will be replaced by converted format which is ready to be used. The second annotation will be replaced by the eponymous rule from [rules table](#rules-table).
 As for styles, nothing recommendations.
 ## License
 In this project using [MIT license](https://github.com/WDYT32/generate-GUI-for-config?tab=MIT-1-ov-file#)
