@@ -43,6 +43,7 @@ echo @"[some text]@"
 We see general entry `modifier_symbol(optional)[body]`.
 Elements in brackets will be converted to HTML and append to page, but if you need to don't have something `[taxt]` case, then you need to use comments `@"[text]@"`. 
 For start comment write `@"` for end same, all that into comments will be ignored. Also, you can use just symbol `@`. After `@` next symbol will be ignored.
+For more examples, see [it](examples/).
 
 #### Modifier symbols
 |Modifier symbol|Description|
