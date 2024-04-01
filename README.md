@@ -12,7 +12,7 @@ For building, you should do:
 - Go to the directory where you have placed the source code. It must have `Cargo.toml` file in root.
 - Open your terminal or console in this directory and run `cargo build --release`.
 - After building is done, you can find the executable file at the path `target/release/` you find executable file with name `ggfc`.
-## Using
+## Usage
 Type this command (on Windows, you need to type `ggfc.exe` instead of `./ggfc`): `./ggfc path/to/your/format -o file/output/name -r path/to/resources`.
 
 There are arguments:
@@ -181,4 +181,4 @@ There is `//<!--html-fragment-->` comments in `addEl` function. It's annotation,
 We see `parse` function which is needed to output configuration in original format. There is `<!--format-->` and `<!--space_char-->` in `parse` function. First annotation will be replaced by converted format which is ready to be used. The second annotation will be replaced by the eponymous rule from [rules table](#rules-table).
 As for styles, nothing recommendations.
 ## License
-In this project using [MIT license](https://github.com/WDYT32/generate-GUI-for-config?tab=MIT-1-ov-file#)
+In this project using [MIT license](LICENSE)
